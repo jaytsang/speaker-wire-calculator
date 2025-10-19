@@ -59,6 +59,8 @@
       flex-direction: column; /* 讓內容和 footer 垂直排列 */
       align-items: center; /* 讓內容居中 */
       min-height: 100vh;
+      /* 確保沒有水平溢出 */
+      overflow-x: hidden;
     }
 
     .container {
@@ -101,11 +103,8 @@
 
     .input-grid-full-width {
         grid-column: 1 / -1;
-        margin-top: 0;
+        margin-top: 15px; /* 統一為 15px */
     }
-
-    /* 確保全寬組件間距正確 */
-    .input-group:nth-child(5) { margin-top: 15px; }
 
     label {
       display: block;
@@ -116,7 +115,7 @@
     }
 
     .input-row {
-      display: flex;
+      display: flex; /* 桌面模式使用 Flex */
       gap: 8px;
       align-items: center;
     }
@@ -166,6 +165,9 @@
       text-align: left;
       padding-left: 0;
       line-height: 1.3;
+      /* 確保 note 文本不會造成溢出 */
+      word-break: break-word;
+      overflow-wrap: break-word;
     }
 
     /* ... 按鈕樣式 ... */
@@ -208,6 +210,18 @@
       text-align: center;
       margin: 10px 0;
     }
+    
+    /* 新增：用於包裹公式註釋的容器 */
+    .math-note {
+        font-size: 0.8em;
+        color: var(--light-text-color);
+        margin-top: -5px; /* 靠近公式 */
+        margin-bottom: 10px;
+        text-align: center;
+        /* 確保註釋能換行 */
+        word-break: break-word;
+        overflow-wrap: break-word;
+    }
 
     /* 核心修正：結果摘要區塊高亮 */
     .summary {
@@ -224,6 +238,7 @@
     }
 
     .summary-item .value {
+      font-family: 'Roboto Mono', monospace;
       font-size: 1.3em; /* 放大數值 */
       font-weight: 700;
       color: var(--summary-value-color); /* 數值高亮顏色 */
@@ -257,7 +272,7 @@
         word-break: break-word;
         overflow-wrap: break-word;
     }
-    
+
     /* Footer 樣式 */
     footer {
         margin-top: 20px;
@@ -275,8 +290,8 @@
     }
 
 
-    /* --- 手機極致緊湊佈局優化：臨界值 360px --- */
-    @media (max-width: 360px) {
+    /* --- 手機極致緊湊佈局優化：臨界值 600px --- */
+    @media (max-width: 600px) {
       body { padding: 8px; }
       .container {
         padding: 10px;
@@ -287,24 +302,31 @@
         margin-bottom: 10px;
       }
 
-      /* 讓輸入組件在手機上從兩欄變回一欄 */
+      /* 保持兩列，但調整間距 */
       .input-grid {
-         grid-template-columns: 1fr; /* 手機單列 */
-         gap: 10px;
+         grid-template-columns: repeat(2, 1fr);
+         gap: 6px;
+         margin-bottom: 8px;
       }
-      /* 確保全寬組件在手機上有上邊距 */
-      .input-grid-full-width {
-        grid-column: 1 / -1;
-        margin-top: 10px;
+      .input-group {
+         padding: 8px; /* 輕微減少 padding */
       }
-      .input-group:nth-child(5) { margin-top: 10px; }
 
+      label {
+        font-size: 0.85em;
+        margin-bottom: 2px;
+      }
 
-      /* 針對前四個輸入框：強制數值輸入框只佔 50% 空間 (已優化，確保不再溢出) */
+      .note {
+        font-size: 0.65em;
+        line-height: 1.1;
+        margin-top: 1px;
+      }
+
+      /* 關鍵修正：讓數字輸入框只佔 50% 空間，防止溢出 */
       .input-group:not(.input-grid-full-width) .input-row {
-          /* 移除 flex-direction: row; 保持預設，讓 input:50% 和 label/note 有空間 */
-          align-items: flex-start; /* 保持對齊 */
-          flex-wrap: wrap; /* 允許換行 */
+          flex-direction: row; /* 強制橫向排版 */
+          align-items: center;
           gap: 3px;
       }
 
@@ -314,13 +336,28 @@
           flex-grow: 0;
           flex-shrink: 0;
       }
-      /* 確保選單在全寬輸入組件中不被 50% 寬度限制 */
-      .input-grid-full-width .input-row input {
-        width: 100%;
-        min-width: unset;
-        max-width: unset;
-        flex-grow: 1;
-        flex-shrink: 1;
+      /* 確保輸入框在窄螢幕下字體略小 */
+      input[type="number"], select {
+          font-size: 0.9em;
+          padding: 6px;
+      }
+
+
+      /* 全寬輸入組件 (電阻率和介電常數) 調整為垂直堆疊 */
+      .input-grid-full-width .input-row {
+          flex-direction: column;
+          gap: 5px;
+          align-items: stretch;
+      }
+
+      .input-grid-full-width .input-row input,
+      .input-grid-full-width .input-row select {
+          width: 100%;
+          max-width: none;
+      }
+
+      .input-grid-full-width {
+        margin-top: 8px;
       }
 
 
@@ -359,6 +396,10 @@
         font-size: 0.85em;
         margin-top: 3px;
         margin-bottom: 3px;
+      }
+      
+      .math-note {
+          font-size: 0.75em; /* 手機上略微縮小 */
       }
     }
   </style>
@@ -441,10 +482,10 @@
       <p>請輸入參數並點擊「計算」以查看結果。</p>
     </div>
   </div>
-  
+
   <footer>
     <span>&copy; Untrue Reality</span>
-    <span>Version 1.0.03</span>
+    <span>Version 1.0.07</span>
   </footer>
 
   <script>
@@ -582,10 +623,10 @@
 
       let formulaLatex, skinDepthInfo;
       if (x < 1) {
-        formulaLatex = "R_{ac} \\approx R_{dc} \\times \\left(1 + \\frac{x^2}{192}\\right)";
+        formulaLatex = "R_{ac} \\approx R_{dc} \\left(1 + \\frac{x^2}{192}\\right)";
         skinDepthInfo = `趨膚深度 $\\delta = \\frac{1}{\\sqrt{\\pi f \\mu_0 \\sigma}} = ${ (1 / Math.sqrt(Math.PI * f * mu0 * sigma) * 1000).toFixed(2)}$ mm (遠大於芯線半徑 $a$)`;
       } else {
-        formulaLatex = "R_{ac} \\approx R_{dc} \\times \\left(\\frac{x}{2\\sqrt{2}} + 0.25\\right)";
+        formulaLatex = "R_{ac} \\approx R_{dc} \\left(\\frac{x}{2\\sqrt{2}} + 0.25\\right)";
         skinDepthInfo = `趨膚深度 $\\delta = \\frac{1}{\\sqrt{\\pi f \\mu_0 \\sigma}} = ${ (1 / Math.sqrt(Math.PI * f * mu0 * sigma) * 1000).toFixed(2)}$ mm (遠小於芯線半徑 $a$)`;
       }
 
@@ -607,12 +648,14 @@
       const C_eq = Math.PI * epsilon0 * epsilon_r * L_single / arccosh_val;
       const C_eq_pF = C_eq * 1e12;
 
-      // --- 輸出排版 ---
+      // --- 輸出排版 (核心修正部分) ---
 
       outputDiv.className = "result";
 
       const rho_latex = formatScientificLatex(rho);
       const sigma_latex = formatScientificLatex(sigma);
+      
+      const C_eq_note = `總電容為 ${C_eq_pF.toFixed(2)}$ pF，等效於每米 ${ (C_eq_pF / L_single).toFixed(2)}$ pF/m。高電容會對放大器造成負載。`;
 
       outputDiv.innerHTML = `
         <div class="summary">
@@ -636,9 +679,9 @@
 
         <h3>一、基本參數</h3>
         <p><strong>高頻計算：</strong> $f = ${f}$ Hz，$\omega = ${ (2 * Math.PI * f).toFixed(2)}$ rad/s</p>
-        <p><strong>導線尺寸：</strong> 單程 $L = ${L_single}$ m，來回 $L_{total} = ${L_total}$ m，半徑 $a = ${a.toFixed(6)}$ m，中心距 $D = ${D.toFixed(6)}$ m</p>
+        <p><strong>導線尺寸：：</strong> 單程 $L = ${L_single}$ m，來回 $L_{total} = ${L_total}$ m，半徑 $a = ${a.toFixed(6)}$ m，中心距 $D = ${D.toFixed(6)}$ m</p>
 
-        <p><strong>導體/絕緣特性：</strong>
+        <p><strong>導體/絕緣特性：：</strong>
             電阻率 $\\rho = ${rho_latex}\\ \\Omega \\cdot \\mathrm{m}$，
             導電率 $\\sigma = ${sigma_latex}\\ \\mathrm{S/m}$，
             相對介電常數 $\\varepsilon_r = ${epsilon_r}$
@@ -656,8 +699,11 @@
         <p><strong>極低頻 (20Hz) 交流電阻 $R_{ac, 20Hz}$：</strong></p>
         <p class="math-block">
             $$
-              R_{ac, 20Hz} = ${Rac_20Hz.toFixed(5)}\\ \\Omega \\quad \\Big(\\text{此數值基本上等同於 直流電阻 } \\Big)
+              R_{ac, 20Hz} = ${Rac_20Hz.toFixed(5)}\\ \\Omega
             $$
+        </p>
+        <p class="math-note">
+            此數值基本上等同於直流電阻。
         </p>
 
         <p><strong>高頻 ($f = ${f}$ Hz) 交流電阻 $R_{ac}$：</strong></p>
@@ -675,8 +721,11 @@
 
         <p class="math-block">
           $$
-            R_{ac} = R_{dc} \\cdot (${Rac_Rdc_ratio.toFixed(4)}) = ${Rac.toFixed(5)}\\ \\Omega \\quad \\Big(R_{\\Delta} = ${deltaR.toFixed(5)}\\ \\Omega \\Big)
+            R_{ac} = R_{dc} \\cdot (${Rac_Rdc_ratio.toFixed(4)}) = ${Rac.toFixed(5)}\\ \\Omega
           $$
+        </p>
+        <p class="math-note" style="font-size: 0.85em; color: #dc3545;">
+            高頻電阻增量 $R_{\\Delta} = ${deltaR.toFixed(5)}\\ \\Omega$。
         </p>
         <p style="font-size: 0.85em; color: ${f > 1000 ? '#dc3545' : '#17a2b8'}; margin-top: 5px;">
             * 備註：$R_{ac}$ 隨頻率增加而增加，主要影響高頻訊號的功率損耗。
@@ -689,8 +738,8 @@
             C_{eq} = \\frac{\\pi \\cdot \\varepsilon_0 \\cdot \\varepsilon_r \\cdot L}{\\mathrm{arccosh}(D / 2a)} = ${C_eq_pF.toFixed(2)}\\ \\mathrm{pF}
           $$
         </p>
-        <p style="font-size: 0.85em; color: #17a2b8; margin-top: 5px;">
-            * 備註：總電容為 ${C_eq_pF.toFixed(2)}$ pF，等效於每米 ${ (C_eq_pF / L_single).toFixed(2)}$ pF/m。高電容會對放大器造成負載。
+        <p class="math-note" style="color: #17a2b8;">
+            * ${C_eq_note}
         </p>
       `;
 
