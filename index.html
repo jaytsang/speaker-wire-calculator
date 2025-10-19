@@ -43,6 +43,11 @@
       --summary-value-color: #0056b3; /* 較深的藍色，用於強調數值 */
     }
 
+    /* 應用 box-sizing: border-box 於所有元素，避免 padding/border 造成溢出 */
+    *, *::before, *::after {
+        box-sizing: border-box;
+    }
+
     body {
       font-family: 'Roboto', 'Noto Sans TC', sans-serif;
       margin: 0;
@@ -270,7 +275,7 @@
     }
 
 
-    /* --- 手機極致緊湊佈局優化：臨界值 360px (從 480px 調整) --- */
+    /* --- 手機極致緊湊佈局優化：臨界值 360px --- */
     @media (max-width: 360px) {
       body { padding: 8px; }
       .container {
@@ -295,10 +300,11 @@
       .input-group:nth-child(5) { margin-top: 10px; }
 
 
-      /* 針對前四個輸入框：強制數值輸入框只佔 50% 空間 */
+      /* 針對前四個輸入框：強制數值輸入框只佔 50% 空間 (已優化，確保不再溢出) */
       .input-group:not(.input-grid-full-width) .input-row {
-          flex-direction: row;
-          align-items: center;
+          /* 移除 flex-direction: row; 保持預設，讓 input:50% 和 label/note 有空間 */
+          align-items: flex-start; /* 保持對齊 */
+          flex-wrap: wrap; /* 允許換行 */
           gap: 3px;
       }
 
@@ -438,7 +444,7 @@
   
   <footer>
     <span>&copy; Untrue Reality</span>
-    <span>Version 1.0.02</span>
+    <span>Version 1.0.03</span>
   </footer>
 
   <script>
@@ -630,7 +636,7 @@
 
         <h3>一、基本參數</h3>
         <p><strong>高頻計算：</strong> $f = ${f}$ Hz，$\omega = ${ (2 * Math.PI * f).toFixed(2)}$ rad/s</p>
-        <p><strong>導線尺寸：：</strong> 單程 $L = ${L_single}$ m，來回 $L_{total} = ${L_total}$ m，半徑 $a = ${a.toFixed(6)}$ m，中心距 $D = ${D.toFixed(6)}$ m</p>
+        <p><strong>導線尺寸：</strong> 單程 $L = ${L_single}$ m，來回 $L_{total} = ${L_total}$ m，半徑 $a = ${a.toFixed(6)}$ m，中心距 $D = ${D.toFixed(6)}$ m</p>
 
         <p><strong>導體/絕緣特性：</strong>
             電阻率 $\\rho = ${rho_latex}\\ \\Omega \\cdot \\mathrm{m}$，
