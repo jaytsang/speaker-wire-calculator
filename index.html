@@ -1,0 +1,733 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>喇叭線電阻與電容計算器</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&family=Noto+Sans+TC:wght@300;400;700&family=Roboto+Mono:wght@400;700&display=swap" rel="stylesheet">
+
+  <script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+      extensions: ["tex2jax.js"],
+      jax: ["input/TeX", "output/HTML-CSS"],
+      tex2jax: {
+        inlineMath: [['$','$']],
+        displayMath: [['$$','$$']],
+        processEscapes: true
+      },
+      showProcessingMessages: false,
+      messageStyle: "none"
+    });
+  </script>
+  <script type="text/javascript"
+    src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.9/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+  </script>
+
+  <style>
+    /* ... (CSS 保持不變) ... */
+    :root {
+      --primary-color: #007bff; /* 品牌藍 */
+      --secondary-color: #6c757d; /* 灰色 */
+      --accent-color: #28a745; /* 綠色 */
+      --background-color: #f8f9fa; /* 淺灰色背景 */
+      --card-background: #ffffff; /* 卡片白色背景 */
+      --input-bg: #f0f0f0; /* 輸入框淡底色 */
+      --group-bg: #f3f7ff; /* 輸入組塊的淡藍色背景 */
+      --border-color: #dee2e6; /* 邊框顏色 */
+      --text-color: #343a40; /* 深色文字 */
+      --light-text-color: #6c757d; /* 淺色文字 */
+      --shadow-medium: 0 4px 12px rgba(0,0,0,0.1);
+      /* 新增：結果摘要區塊的顏色 */
+      --summary-bg: #e9ecef; /* 較淺的灰色，用於結果背景 */
+      --summary-value-color: #0056b3; /* 較深的藍色，用於強調數值 */
+    }
+
+    body {
+      font-family: 'Roboto', 'Noto Sans TC', sans-serif;
+      margin: 0;
+      padding: 15px;
+      background: var(--background-color);
+      color: var(--text-color);
+      line-height: 1.5;
+      display: flex;
+      flex-direction: column; /* 讓內容和 footer 垂直排列 */
+      align-items: center; /* 讓內容居中 */
+      min-height: 100vh;
+    }
+
+    .container {
+      max-width: 800px;
+      width: 100%;
+      background: var(--card-background);
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: var(--shadow-medium);
+      margin: 10px 0;
+      flex-shrink: 0; /* 確保容器不會被 footer 擠壓 */
+    }
+
+    h2 {
+      text-align: center;
+      color: var(--primary-color);
+      margin-bottom: 20px;
+      font-weight: 700;
+      font-size: 1.6em;
+      border-bottom: 2px solid var(--primary-color);
+      padding-bottom: 10px;
+    }
+
+    /* 輸入盒子排版：使用 Grid 佈局 */
+    .input-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr); /* 桌面兩列 */
+        gap: 15px;
+        margin-bottom: 15px;
+    }
+
+    /* 為每個輸入組添加輕淡底色和內邊距 */
+    .input-group {
+        background-color: var(--group-bg);
+        padding: 12px;
+        border-radius: 6px;
+        border: 1px solid #cce5ff;
+        margin-bottom: 0;
+    }
+
+    .input-grid-full-width {
+        grid-column: 1 / -1;
+        margin-top: 0;
+    }
+
+    /* 確保全寬組件間距正確 */
+    .input-group:nth-child(5) { margin-top: 15px; }
+
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: 600;
+      color: var(--text-color);
+      font-size: 1.0em;
+    }
+
+    .input-row {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    /* 輸入框/下拉菜單本身使用淡底色 */
+    input[type="number"], select {
+      flex-grow: 1;
+      padding: 8px;
+      border: 1px solid var(--border-color);
+      border-radius: 4px;
+      font-family: 'Roboto Mono', monospace;
+      font-size: 0.95em;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      appearance: none;
+      background-color: var(--input-bg);
+    }
+
+    select {
+      flex-grow: 0;
+      min-width: 120px;
+      font-family: 'Noto Sans TC', sans-serif;
+      cursor: pointer;
+
+      background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23343a40'%3e%3cpath d='M7 10l5 5 5-5z'/%3e%3c/svg%3e");
+      background-repeat: no-repeat;
+      background-position: right 8px center;
+      background-size: 12px;
+      padding-right: 25px;
+    }
+
+    /* 全寬度輸入組件中的輸入框，在桌面版依然受 max-width 限制 */
+    .input-grid-full-width .input-row input {
+        width: 100%;
+        max-width: 300px;
+    }
+
+    .input-grid-full-width .input-row {
+        gap: 10px;
+    }
+
+    .note {
+      font-size: 0.8em;
+      color: var(--light-text-color);
+      margin-top: 3px;
+      text-align: left;
+      padding-left: 0;
+      line-height: 1.3;
+    }
+
+    /* ... 按鈕樣式 ... */
+
+    button {
+      display: block;
+      width: 100%;
+      padding: 10px 15px;
+      margin-top: 20px;
+      background-color: var(--primary-color);
+      color: white;
+      border: none;
+      border-radius: 5px;
+      font-size: 1.1em;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background-color 0.2s ease, transform 0.1s ease;
+      letter-spacing: 0.5px;
+    }
+
+    button:hover {
+      background-color: #0056b3;
+      transform: translateY(-1px);
+    }
+
+    .result {
+      margin-top: 25px;
+      padding: 15px;
+      border-radius: 6px;
+      border: 1px solid var(--border-color);
+      background: var(--background-color);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+      font-size: 1.0em;
+      line-height: 1.6;
+      word-break: break-word;
+      overflow-wrap: break-word;
+    }
+
+    .math-block {
+      text-align: center;
+      margin: 10px 0;
+    }
+
+    /* 核心修正：結果摘要區塊高亮 */
+    .summary {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr); /* 桌面四列 */
+      gap: 8px;
+      padding: 15px 10px; /* 增加內邊距 */
+      margin: 10px 0 20px 0;
+      background-color: var(--summary-bg); /* 摘要背景色 */
+      border-radius: 6px; /* 圓角 */
+      border: 1px solid var(--border-color); /* 邊框 */
+      box-shadow: inset 0 1px 3px rgba(0,0,0,0.05); /* 內陰影 */
+      text-align: center;
+    }
+
+    .summary-item .value {
+      font-size: 1.3em; /* 放大數值 */
+      font-weight: 700;
+      color: var(--summary-value-color); /* 數值高亮顏色 */
+      display: block;
+      margin-bottom: 2px;
+    }
+
+    .summary-item .label {
+      font-size: 0.85em; /* 略微放大標籤 */
+      color: var(--text-color);
+      line-height: 1.3;
+    }
+
+    .result h3 {
+        font-size: 1.3em;
+        margin-top: 15px;
+        margin-bottom: 5px;
+    }
+
+    .result p {
+        margin-top: 5px;
+        margin-bottom: 5px;
+        font-size: 0.95em;
+    }
+
+    .error-message {
+        color: #dc3545;
+        font-weight: bold;
+        margin-top: 3px;
+        font-size: 0.85em;
+        word-break: break-word;
+        overflow-wrap: break-word;
+    }
+    
+    /* Footer 樣式 */
+    footer {
+        margin-top: 20px;
+        padding: 10px;
+        text-align: center;
+        font-size: 0.75em;
+        color: var(--light-text-color);
+        width: 100%;
+        max-width: 800px; /* 限制 footer 寬度與 container 一致 */
+        flex-shrink: 0;
+    }
+    footer span {
+        display: block;
+        margin: 2px 0;
+    }
+
+
+    /* --- 手機極致緊湊佈局優化：臨界值 360px (從 480px 調整) --- */
+    @media (max-width: 360px) {
+      body { padding: 8px; }
+      .container {
+        padding: 10px;
+        margin: 5px 0;
+      }
+      h2 {
+        font-size: 1.35em;
+        margin-bottom: 10px;
+      }
+
+      /* 讓輸入組件在手機上從兩欄變回一欄 */
+      .input-grid {
+         grid-template-columns: 1fr; /* 手機單列 */
+         gap: 10px;
+      }
+      /* 確保全寬組件在手機上有上邊距 */
+      .input-grid-full-width {
+        grid-column: 1 / -1;
+        margin-top: 10px;
+      }
+      .input-group:nth-child(5) { margin-top: 10px; }
+
+
+      /* 針對前四個輸入框：強制數值輸入框只佔 50% 空間 */
+      .input-group:not(.input-grid-full-width) .input-row {
+          flex-direction: row;
+          align-items: center;
+          gap: 3px;
+      }
+
+      .input-group:not(.input-grid-full-width) .input-row input {
+          width: 50%;
+          min-width: 50%;
+          flex-grow: 0;
+          flex-shrink: 0;
+      }
+      /* 確保選單在全寬輸入組件中不被 50% 寬度限制 */
+      .input-grid-full-width .input-row input {
+        width: 100%;
+        min-width: unset;
+        max-width: unset;
+        flex-grow: 1;
+        flex-shrink: 1;
+      }
+
+
+      /* 總結區改為兩列 (手機) */
+      .summary {
+        grid-template-columns: repeat(2, 1fr); /* 手機改為兩列 */
+        gap: 6px;
+        padding: 10px 5px;
+        margin: 5px 0 10px 0;
+      }
+      .summary-item .value {
+        font-size: 1.1em;
+      }
+      .summary-item .label {
+        font-size: 0.7em;
+      }
+
+      button {
+        margin-top: 10px;
+        padding: 8px 15px;
+        font-size: 1.0em;
+      }
+
+      /* 結果區縮窄 */
+      .result {
+        padding: 8px;
+        margin-top: 15px;
+        font-size: 0.9em;
+      }
+      .result h3 {
+        font-size: 1.15em;
+        margin-top: 10px;
+        margin-bottom: 3px;
+      }
+      .result p {
+        font-size: 0.85em;
+        margin-top: 3px;
+        margin-bottom: 3px;
+      }
+    }
+  </style>
+</head>
+<body onload="updateRoundTrip()">
+  <div class="container">
+    <h2>喇叭線電阻與電容計算器</h2>
+
+    <div class="input-grid">
+        <div class="input-group">
+        <label for="length">導線單程長度 L（米）</label>
+        <div class="input-row">
+            <input type="number" id="length" value="5" oninput="updateRoundTrip()">
+        </div>
+        <div class="note">來回長度 = <span id="roundTrip">10.00</span> 米</div>
+        </div>
+
+        <div class="input-group">
+        <label for="diameter">芯徑 d（毫米）</label>
+        <div class="input-row">
+            <input type="number" id="diameter" value="2.5">
+        </div>
+        <div class="note">導體芯線的實際直徑</div>
+        </div>
+
+        <div class="input-group">
+        <label for="insulation">絕緣厚度 t（毫米）</label>
+        <div class="input-row">
+            <input type="number" id="insulation" value="0.55">
+        </div>
+        <div class="note">絕緣層單邊厚度</div>
+        </div>
+
+        <div class="input-group">
+        <label for="frequency">測試頻率 f（Hz）</label>
+        <div class="input-row">
+            <input type="number" id="frequency" value="20000">
+        </div>
+        <div class="note">用於計算高頻 $R_{ac}$</div>
+        </div>
+    </div>
+
+    <div class="input-group input-grid-full-width">
+        <label for="resistivity">導線電阻率 ρ（Ω·m）</label>
+        <div class="input-row">
+            <input type="number" id="resistivity" value="1.72e-8" step="any" oninput="clearResistivityError()">
+            <select id="metal_selector" onchange="applyMetalResistivity()">
+                <option value="custom">自定義</option>
+                <option value="1.59e-8">銀 (Ag)</option>
+                <option value="1.68e-8">純銅/紫銅 (High Purity Cu)</option>
+                <option value="1.72e-8" selected>標準退火銅 (Annealed Cu)</option>
+                <option value="2.44e-8">金 (Au)</option>
+                <option value="2.82e-8">鋁 (Al)</option>
+            </select>
+        </div>
+        <div class="note" id="resistivity-note">數值基於 20°C/68°F。自定義範圍建議在 $1.5 \times 10^{-8}$ 到 $5.0 \times 10^{-8}\ \Omega\cdot\mathrm{m}$ 之間。</div>
+        <div class="error-message" id="resistivity-error"></div>
+    </div>
+
+    <div class="input-group input-grid-full-width">
+        <label for="epsilon_r">絕緣電介常數 εᵣ</label>
+        <div class="input-row">
+            <input type="number" id="epsilon_r" value="3.5" step="any">
+            <select id="insulator_selector" onchange="applyInsulatorEpsilon()">
+                <option value="custom">自定義</option>
+                <option value="1.00059">空氣 (Air)</option>
+                <option value="2.1">聚四氟乙烯 (PTFE / Teflon)</option>
+                <option value="2.2">聚乙烯 (PE)</option>
+                <option value="2.6">聚丙烯 (PP)</option>
+                <option value="3.5" selected>聚氯乙烯 (PVC)</option>
+                <option value="4.0">天然橡膠</option>
+            </select>
+        </div>
+        <div class="note">真空介電常數 $\varepsilon_0 \approx 8.854 \times 10^{-12} \mathrm{F/m}$</div>
+    </div>
+
+    <button onclick="calculate()">計算</button>
+
+    <div class="result" id="output">
+      <p>請輸入參數並點擊「計算」以查看結果。</p>
+    </div>
+  </div>
+  
+  <footer>
+    <span>&copy; Untrue Reality</span>
+    <span>Version 1.0.02</span>
+  </footer>
+
+  <script>
+    // --- 常量定義 ---
+    const RHO_MIN = 1.0e-8;
+    const RHO_MAX = 5.0e-8;
+
+    // --- 下拉選單處理函式 ---
+    function applyMetalResistivity() {
+        const selector = document.getElementById("metal_selector");
+        const resistivityInput = document.getElementById("resistivity");
+        const value = selector.value;
+        if (value !== "custom") {
+            resistivityInput.value = value;
+        }
+        clearResistivityError();
+    }
+
+    function applyInsulatorEpsilon() {
+        const selector = document.getElementById("insulator_selector");
+        const epsilonInput = document.getElementById("epsilon_r");
+        const value = selector.value;
+        if (value !== "custom") {
+            epsilonInput.value = value;
+        }
+    }
+
+    function clearResistivityError() {
+        document.getElementById("resistivity-error").textContent = "";
+    }
+
+    // --- 輔助函式：科學記數法美化 (輸出 LaTeX 格式) ---
+    function formatScientificLatex(num, decimals = 2) {
+        const absNum = Math.abs(num);
+        const sign = num < 0 ? "-" : "";
+        const parts = absNum.toExponential(decimals).split('e');
+        const coefficient = parts[0];
+        const exponent = parseInt(parts[1], 10);
+
+        return `${sign}${coefficient} \\times 10^{${exponent}}`;
+    }
+
+    function updateRoundTrip() {
+      const L = parseFloat(document.getElementById("length").value);
+      if (!isNaN(L)) {
+        document.getElementById("roundTrip").textContent = (L * 2).toFixed(2);
+      } else {
+        document.getElementById("roundTrip").textContent = "N/A";
+      }
+    }
+
+    // 計算 Rac 的輔助函式 (用於 20Hz 和 f Hz)
+    function calculateRac(Rdc, a, sigma, mu0, f) {
+        const omega = 2 * Math.PI * f;
+        const x = a * Math.sqrt(omega * mu0 * sigma);
+        let Rac_Rdc_ratio;
+
+        if (x < 1) {
+            // 使用二階近似公式
+            Rac_Rdc_ratio = 1 + (x * x) / 192;
+        } else {
+            // 使用高頻近似公式
+            Rac_Rdc_ratio = x / (2 * Math.sqrt(2)) + 0.25;
+        }
+
+        // 確保結果不小於 1 (防止浮點誤差導致 Rac < Rdc)
+        Rac_Rdc_ratio = Math.max(1.0, Rac_Rdc_ratio);
+
+        return {
+            Rac: Rdc * Rac_Rdc_ratio,
+            x: x,
+            ratio: Rac_Rdc_ratio
+        };
+    }
+
+    function calculate() {
+      // 獲取輸入值
+      const L_single = parseFloat(document.getElementById("length").value);
+      const d_mm = parseFloat(document.getElementById("diameter").value);
+      const t_mm = parseFloat(document.getElementById("insulation").value);
+      let rho = parseFloat(document.getElementById("resistivity").value);
+      const epsilon_r = parseFloat(document.getElementById("epsilon_r").value);
+      const f = parseFloat(document.getElementById("frequency").value);
+
+      const outputDiv = document.getElementById("output");
+      const errorDiv = document.getElementById("resistivity-error");
+      errorDiv.textContent = "";
+
+      // 檢查基礎輸入
+      if (isNaN(L_single) || isNaN(d_mm) || isNaN(t_mm) || isNaN(rho) || isNaN(epsilon_r) || isNaN(f)) {
+        outputDiv.innerHTML = '<p style="color: red; font-weight: bold;">⚠️ 請輸入所有有效的數值。</p>';
+        if (typeof MathJax !== 'undefined' && MathJax.Hub) {
+             MathJax.Hub.Queue(["Typeset", MathJax.Hub, outputDiv]);
+        }
+        return;
+      }
+
+      if (d_mm <= 0 || t_mm < 0 || rho <= 0 || epsilon_r < 1 || f <= 0 || L_single <= 0) {
+        outputDiv.innerHTML = '<p style="color: red; font-weight: bold;">⚠️ 輸入值必須為正數 (除了絕緣厚度 t 可為零)。</p>';
+        if (typeof MathJax !== 'undefined' && MathJax.Hub) {
+             MathJax.Hub.Queue(["Typeset", MathJax.Hub, outputDiv]);
+        }
+        return;
+      }
+
+      // 檢查電阻率範圍
+      if (rho < RHO_MIN || rho > RHO_MAX) {
+          errorDiv.innerHTML = `⚠️ 電阻率超出有效範圍 ($\\rho$ 應在 ${formatScientificLatex(RHO_MIN, 2)} 到 ${formatScientificLatex(RHO_MAX, 2)}\\ \\Omega\\cdot\\mathrm{m}$ 之間)。`;
+          outputDiv.innerHTML = '<p style="color: red; font-weight: bold;">⚠️ 輸入檢查失敗，請修正電阻率。</p>';
+          if (typeof MathJax !== 'undefined' && MathJax.Hub) {
+               MathJax.Hub.Queue(["Typeset", MathJax.Hub, errorDiv, outputDiv]);
+          }
+          return;
+      }
+
+
+      // --- 核心計算 (通用常數與參數) ---
+      const L_total = L_single * 2;
+      const a = d_mm / 2 / 1000;
+      const t = t_mm / 1000;
+      const D = 2 * (a + t);
+      const sigma = 1 / rho;
+      const mu0 = 4 * Math.PI * 1e-7;
+      const epsilon0 = 8.854e-12;
+
+      // 1. 直流電阻
+      const Rdc = rho * L_total / (Math.PI * a * a);
+
+      // 2. 交流電阻 (Rac) - 高頻 (用戶輸入 f)
+      const result_high_f = calculateRac(Rdc, a, sigma, mu0, f);
+      const Rac = result_high_f.Rac;
+      const x = result_high_f.x;
+      const Rac_Rdc_ratio = result_high_f.ratio;
+      const deltaR = Rac - Rdc;
+
+      let formulaLatex, skinDepthInfo;
+      if (x < 1) {
+        formulaLatex = "R_{ac} \\approx R_{dc} \\times \\left(1 + \\frac{x^2}{192}\\right)";
+        skinDepthInfo = `趨膚深度 $\\delta = \\frac{1}{\\sqrt{\\pi f \\mu_0 \\sigma}} = ${ (1 / Math.sqrt(Math.PI * f * mu0 * sigma) * 1000).toFixed(2)}$ mm (遠大於芯線半徑 $a$)`;
+      } else {
+        formulaLatex = "R_{ac} \\approx R_{dc} \\times \\left(\\frac{x}{2\\sqrt{2}} + 0.25\\right)";
+        skinDepthInfo = `趨膚深度 $\\delta = \\frac{1}{\\sqrt{\\pi f \\mu_0 \\sigma}} = ${ (1 / Math.sqrt(Math.PI * f * mu0 * sigma) * 1000).toFixed(2)}$ mm (遠小於芯線半徑 $a$)`;
+      }
+
+      // 3. 交流電阻 (Rac) - 低頻 (20 Hz)
+      const f_low = 20;
+      const result_low_f = calculateRac(Rdc, a, sigma, mu0, f_low);
+      const Rac_20Hz = result_low_f.Rac;
+
+      // 4. 等效電容 (Equivalent Capacitance) - 雙線平行導體模型
+      const arccosh_arg = D / (2 * a);
+      if (arccosh_arg <= 1) {
+          outputDiv.innerHTML = '<p style="color: red; font-weight: bold;">⚠️ 絕緣厚度 t 不足以使導線中心距 D 嚴格大於導線直徑 2a ($D / 2a \\le 1$)。請檢查輸入值。</p>';
+          if (typeof MathJax !== 'undefined' && MathJax.Hub) {
+               MathJax.Hub.Queue(["Typeset", MathJax.Hub, outputDiv]);
+          }
+          return;
+      }
+      const arccosh_val = Math.log(arccosh_arg + Math.sqrt(arccosh_arg ** 2 - 1));
+      const C_eq = Math.PI * epsilon0 * epsilon_r * L_single / arccosh_val;
+      const C_eq_pF = C_eq * 1e12;
+
+      // --- 輸出排版 ---
+
+      outputDiv.className = "result";
+
+      const rho_latex = formatScientificLatex(rho);
+      const sigma_latex = formatScientificLatex(sigma);
+
+      outputDiv.innerHTML = `
+        <div class="summary">
+          <div class="summary-item">
+            <div class="value">${Rac_20Hz.toFixed(5)} $\\Omega$</div>
+            <div class="label">交流電阻 ($R_{ac}$) @ 20Hz <br> (≈直流電阻)</div>
+          </div>
+          <div class="summary-item">
+            <div class="value">${Rac.toFixed(5)} $\\Omega$</div>
+            <div class="label">交流電阻 ($R_{ac}$) @ ${f/1000}kHz</div>
+          </div>
+          <div class="summary-item">
+            <div class="value">${deltaR.toFixed(5)} $\\Omega$</div>
+            <div class="label">高頻電阻增量 ($R_{\\Delta}$)</div>
+          </div>
+          <div class="summary-item">
+            <div class="value">${C_eq_pF.toFixed(2)} pF</div>
+            <div class="label">等效電容 ($C_{eq}$)</div>
+          </div>
+        </div>
+
+        <h3>一、基本參數</h3>
+        <p><strong>高頻計算：</strong> $f = ${f}$ Hz，$\omega = ${ (2 * Math.PI * f).toFixed(2)}$ rad/s</p>
+        <p><strong>導線尺寸：：</strong> 單程 $L = ${L_single}$ m，來回 $L_{total} = ${L_total}$ m，半徑 $a = ${a.toFixed(6)}$ m，中心距 $D = ${D.toFixed(6)}$ m</p>
+
+        <p><strong>導體/絕緣特性：</strong>
+            電阻率 $\\rho = ${rho_latex}\\ \\Omega \\cdot \\mathrm{m}$，
+            導電率 $\\sigma = ${sigma_latex}\\ \\mathrm{S/m}$，
+            相對介電常數 $\\varepsilon_r = ${epsilon_r}$
+        </p>
+
+        <h3>二、電阻計算 ($R_{dc}$ 與 $R_{ac}$)</h3>
+
+        <p><strong>直流電阻 $R_{dc}$ (線材固有電阻)：</strong></p>
+        <p class="math-block">
+          $$
+            R_{dc} = \\rho \\frac{L_{total}}{\\pi a^2} = ${Rdc.toFixed(5)}\\ \\Omega
+          $$
+        </p>
+
+        <p><strong>極低頻 (20Hz) 交流電阻 $R_{ac, 20Hz}$：</strong></p>
+        <p class="math-block">
+            $$
+              R_{ac, 20Hz} = ${Rac_20Hz.toFixed(5)}\\ \\Omega \\quad \\Big(\\text{此數值基本上等同於 直流電阻 } \\Big)
+            $$
+        </p>
+
+        <p><strong>高頻 ($f = ${f}$ Hz) 交流電阻 $R_{ac}$：</strong></p>
+        <p>計算趨膚效應參數 $x$：
+          $$
+            x = a \\cdot \\sqrt{\\omega \\cdot \\mu_0 \\cdot \\sigma} = ${x.toFixed(4)}
+          $$
+        </p>
+        <p style="font-size: 0.85em; color: var(--light-text-color);">* 趨膚效應影響判斷：${skinDepthInfo}</p>
+
+        <p>根據 $x$ 值，使用趨膚效應近似公式計算 $R_{ac}$：</p>
+        <p class="math-block">
+          $$${formulaLatex}$$
+        </p>
+
+        <p class="math-block">
+          $$
+            R_{ac} = R_{dc} \\cdot (${Rac_Rdc_ratio.toFixed(4)}) = ${Rac.toFixed(5)}\\ \\Omega \\quad \\Big(R_{\\Delta} = ${deltaR.toFixed(5)}\\ \\Omega \\Big)
+          $$
+        </p>
+        <p style="font-size: 0.85em; color: ${f > 1000 ? '#dc3545' : '#17a2b8'}; margin-top: 5px;">
+            * 備註：$R_{ac}$ 隨頻率增加而增加，主要影響高頻訊號的功率損耗。
+        </p>
+
+        <h3>三、等效電容 ($C_{eq}$)</h3>
+        <p>電線在單程 $L$ 下的等效電容 (採用雙平行導體模型)：</p>
+        <p class="math-block">
+          $$
+            C_{eq} = \\frac{\\pi \\cdot \\varepsilon_0 \\cdot \\varepsilon_r \\cdot L}{\\mathrm{arccosh}(D / 2a)} = ${C_eq_pF.toFixed(2)}\\ \\mathrm{pF}
+          $$
+        </p>
+        <p style="font-size: 0.85em; color: #17a2b8; margin-top: 5px;">
+            * 備註：總電容為 ${C_eq_pF.toFixed(2)}$ pF，等效於每米 ${ (C_eq_pF / L_single).toFixed(2)}$ pF/m。高電容會對放大器造成負載。
+        </p>
+      `;
+
+      // 確保 MathJax 處理新的 HTML 內容
+      if (typeof MathJax !== 'undefined' && MathJax.Hub) {
+         MathJax.Hub.Queue(["Typeset", MathJax.Hub, outputDiv]);
+      } else {
+         console.warn("MathJax 尚未載入，無法渲染公式。");
+      }
+    }
+
+    // --- 初始化 ---
+    document.addEventListener('DOMContentLoaded', () => {
+        // 設定初始下拉選單值 (電阻率)
+        const defaultResistivity = document.getElementById("resistivity").value;
+        const metalSelector = document.getElementById("metal_selector");
+        for (let i = 0; i < metalSelector.options.length; i++) {
+            if (metalSelector.options[i].value === defaultResistivity) {
+                metalSelector.selectedIndex = i;
+                break;
+            }
+        }
+
+        // 設定初始下拉選單值 (介電率)
+        const defaultEpsilonR = document.getElementById("epsilon_r").value;
+        const insulatorSelector = document.getElementById("insulator_selector");
+          for (let i = 0; i < insulatorSelector.options.length; i++) {
+            if (insulatorSelector.options[i].value === defaultEpsilonR) {
+                insulatorSelector.selectedIndex = i;
+                break;
+            }
+        }
+
+        updateRoundTrip();
+
+        // 使用 MathJax 的 Queue 機制確保初始渲染在 MathJax 載入完成後執行
+        if (typeof MathJax !== 'undefined' && MathJax.Hub) {
+            MathJax.Hub.Queue(calculate);
+        } else {
+            // 備用：如果 MathJax 尚未定義，則延遲執行 calculate
+            setTimeout(calculate, 500);
+        }
+    });
+  </script>
+</body>
+</html>
